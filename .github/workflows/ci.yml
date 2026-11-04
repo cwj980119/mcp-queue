@@ -1,0 +1,19 @@
+name: checks
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm audit --omit=dev
+      - run: node scripts/setup.mjs
+      - run: docker compose up -d --build --wait
+      - run: npm run test:compose
+      - if: always()
+        run: docker compose logs --tail 100 server

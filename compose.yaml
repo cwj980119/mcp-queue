@@ -1,0 +1,33 @@
+name: mcp-queue
+services:
+  setup:
+    image: node:22-bookworm-slim
+    profiles: [tools]
+    working_dir: /workspace
+    environment:
+      QUEUE_SERVER_URL: ${QUEUE_SERVER_URL:-http://localhost:3000}
+    user: "${QUEUE_UID:-0}:${QUEUE_GID:-0}"
+    volumes:
+      - ./:/workspace
+    command: [node, scripts/setup.mjs]
+  server:
+    build: .
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}:3000"
+    environment:
+      AUTH_FILE: /run/queue/auth.json
+      DATABASE_PATH: /data/queue.sqlite
+    volumes:
+      - queue-data:/data
+      - ./.local/auth.json:/run/queue/auth.json:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  queue-data:

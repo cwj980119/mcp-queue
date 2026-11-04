@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MCP Queue</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<header><div><span class="badge">TWO PEOPLE · TWO AGENTS</span><h1>MCP Queue</h1><p>요청을 받고, 승인하고, 답변을 검토하세요.</p></div><div id="identity"></div></header>
+<main>
+  <section id="login" class="card"><h2>내 요청함 열기</h2><p>관리자가 전달한 본인의 <code>human-token.txt</code> 값을 입력하세요. 토큰은 이 페이지의 메모리에만 보관됩니다.</p><form id="login-form"><label for="token">사람용 토큰</label><input id="token" type="password" autocomplete="off" required><button>연결</button></form></section>
+  <section id="workspace" hidden>
+    <nav><button id="inbox" class="selected">받은 요청</button><button id="sent">보낸 요청</button><button id="refresh">새로고침</button><span id="connection" role="status"></span><button id="logout">로그아웃</button></nav>
+    <details class="card"><summary>새 요청 보내기</summary><form id="create-form">
+      <label for="recipient">받는 사용자</label><select id="recipient" required></select>
+      <label for="title">제목</label><input id="title" maxlength="200" required>
+      <label for="body">질문 또는 요청</label><textarea id="body" maxlength="16000" rows="4" required></textarea>
+      <div class="columns"><div><label for="documentRef">사내 문서 링크 또는 ID</label><input id="documentRef" maxlength="2000"></div><div><label for="documentVersion">문서 버전 (선택)</label><input id="documentVersion" maxlength="200"></div></div>
+      <p class="hint">문서 원문과 인증정보 대신 참조만 전달하세요. 받는 사람이 승인하면 해당 PC의 에이전트가 문서 MCP로 확인합니다.</p><button>요청 전송</button>
+    </form></details>
+    <div class="layout"><section><h2 id="box-title">받은 요청</h2><div id="requests"></div></section><section class="card" id="detail"><p class="hint">요청을 선택하세요.</p></section></div>
+  </section>
+  <p id="notice" role="status" aria-live="polite"></p>
+</main><footer>실행 승인 → 내 PC에서 처리 → 답변 검토 → 최종 전송</footer>
+</body></html>

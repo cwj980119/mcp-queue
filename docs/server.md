@@ -45,6 +45,7 @@ Node.js가 이미 설치된 서버에서는 Docker 초기화 대신 `npm run set
 | `.local/alice/opencode-mcp.json` | A의 OpenCode에 병합할 MCP 설정. 에이전트 토큰 |
 | `.local/alice/manager.json` | A PC 관리자 설정. 작업 인수·초안 제출용 토큰 |
 | `.local/bob/*` | B에게만 전달하는 같은 종류의 파일 |
+| 각 사용자 폴더의 `claude-mcp.json`, `manager.claude.json` | Claude Code를 선택한 사용자의 Queue MCP·CLI 관리자 설정. 같은 사용자 토큰 사용 |
 
 운영자가 각 사용자에게 자신의 폴더만 회사의 안전한 전달 방법으로 전달합니다. 저장소는 비공개지만 `.local`과 `.env`는 Git에 넣지 않습니다. 설치 작업 완료 후 원문 토큰 묶음은 운영자가 접근을 제한하거나 회사의 비밀 저장소로 옮기고, 실행 서버에는 `auth.json`만 유지할 수 있습니다.
 

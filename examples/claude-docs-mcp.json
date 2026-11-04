@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "corpdocs": {
+      "type": "http",
+      "url": "https://REPLACE_WITH_INTERNAL_DOCS_SERVICE/mcp",
+      "headers": { "Authorization": "Bearer ${CORPDOCS_TOKEN}" }
+    }
+  }
+}

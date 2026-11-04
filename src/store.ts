@@ -97,7 +97,7 @@ export class Store {
       else throw new AppError(409, 'Action is not allowed in this state');
       this.db.prepare(`UPDATE requests SET state=?, result=?, error=?, runId=NULL, updatedAt=? WHERE id=?`)
         .run(next, next === 'replied' ? text.trim() : current.result,
-          action === 'interrupt' ? 'Marked interrupted by user. Check the OpenCode session before retrying.' : '',
+          action === 'interrupt' ? 'Marked interrupted by user. Check the local agent session before retrying.' : '',
           new Date().toISOString(), id);
       const updated = this.raw(id); this.audit(updated, actor, action); return updated;
     });

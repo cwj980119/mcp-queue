@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { WebSocket } from 'ws';
@@ -15,7 +16,7 @@ export async function waitFor<T>(fn: () => Promise<T | undefined | false>, timeo
   while (Date.now() < end) { const value = await fn(); if (value) return value; await new Promise(done => setTimeout(done, 40)); }
   throw new Error('Timed out waiting for expected state');
 }
-export async function exercise(url: string, tokens: Tokens, stateDir: string) {
+export async function exercise(url: string, tokens: Tokens, stateDir: string, options: { mixed?: boolean; fixtureLog?: string } = {}) {
   let promptCalls = 0;
   const directory = resolve('test/mock-project');
   const prompts: unknown[] = [];
@@ -36,7 +37,14 @@ export async function exercise(url: string, tokens: Tokens, stateDir: string) {
   });
   await new Promise<void>(done => mock.listen(0, '127.0.0.1', done));
   const address = mock.address(); assert(address && typeof address !== 'string');
-  const managers = (['alice', 'bob'] as const).map(id => new Manager(managerSchema.parse({
+  mkdirSync(stateDir, { recursive: true });
+  const mcpConfig = resolve(stateDir, 'fixture-docs.json');
+  if (options.mixed) writeFileSync(mcpConfig, JSON.stringify({ mcpServers: { corpdocs: { type:'http',url:'http://127.0.0.1:1/mcp' } } }));
+  const managers = (['alice', 'bob'] as const).map(id => new Manager(managerSchema.parse(options.mixed && id === 'bob' ? {
+    runtime:'claude-code', serverUrl:url, workerToken:tokens[id].worker, directory:resolve('.'),timeoutMs:10000,reconcileMs:1000,
+    claude:{ command:[process.execPath,resolve('test/fixtures/claude-cli.mjs'),...(options.fixtureLog?['--fixture-log',options.fixtureLog]:[])],
+      mcpConfig, allowedTools:['mcp__corpdocs__get_document'] }
+  } : {
     serverUrl: url, workerToken: tokens[id].worker, opencodeUrl: `http://127.0.0.1:${address.port}`,
     directory, timeoutMs: 10000, reconcileMs: 1000
   }), stateDir));
@@ -83,8 +91,9 @@ export async function exercise(url: string, tokens: Tokens, stateDir: string) {
     const reverseDraft = await waitFor(async () => { const t = await api('alice','human',`/api/requests/${reverse.id}`); return t.state === 'draft' && t; });
     await api('alice','human',`/api/requests/${reverse.id}/action`,{action:'publish',text:reverseDraft.draft});
     assert.equal((await api('bob','human',`/api/requests/${reverse.id}`)).state,'replied');
-    assert.equal(promptCalls,2); assert.equal(prompts.length,2);
-    return { requests:2, agentRuns:promptCalls, mcpTools:tools.tools.length, transport:'real MCP + REST + WebSocket; mock OpenCode, no GLM calls' };
+    assert.equal(promptCalls,options.mixed?1:2); assert.equal(prompts.length,promptCalls);
+    return { requests:2, agentRuns:2, opencodeRuns:promptCalls, claudeRuns:options.mixed?1:0,
+      mcpTools:tools.tools.length, transport:'real MCP + REST + WebSocket; mock agent runtimes, no model calls' };
   } finally {
     ws.terminate(); await client.close(); await Promise.all(managers.map(manager => manager.stop()));
     await new Promise<void>(done => { mock.close(() => done()); mock.closeAllConnections(); });

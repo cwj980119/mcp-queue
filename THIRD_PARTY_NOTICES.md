@@ -53,4 +53,4 @@ These packages are consumed as dependencies through npm, not reimplemented. Thei
 | Zod | https://github.com/colinhacks/zod | MIT |
 | SQLite via Node.js | https://nodejs.org/api/sqlite.html | Node.js MIT; SQLite public domain |
 
-The web UI uses plain HTML, CSS and JavaScript without a frontend framework. OpenCode is installed and licensed separately on each user's PC.
+The web UI uses plain HTML, CSS and JavaScript without a frontend framework. OpenCode or Claude Code is installed and licensed separately on each user's PC. Claude Code is invoked through its documented CLI; no Claude Code implementation is copied or bundled. The local document tool filter uses the official MCP SDK.

@@ -4,7 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { WebSocket } from 'ws';
 import { z } from 'zod';
-import { managerSchema, OpenCodeAdapter, type ManagerConfig } from './opencode.js';
+import { OpenCodeAdapter } from './opencode.js';
+import { ClaudeCodeAdapter } from './claude.js';
+import { managerSchema, type ManagerConfig } from './config.js';
+import type { AgentAdapter } from './agent.js';
 import type { Task } from './types.js';
 
 type Pending = { id: string; runId: string; kind: 'draft' | 'fail'; text: string };
@@ -17,11 +20,11 @@ export class Manager {
   private interval?: ReturnType<typeof setInterval>;
   private pingTimer?: ReturnType<typeof setTimeout>;
   private controller?: AbortController;
-  private readonly adapter: OpenCodeAdapter;
+  private readonly adapter: AgentAdapter;
   private readonly pendingDir: string;
   private idleWaiters: (() => void)[] = [];
   constructor(readonly config: ManagerConfig, stateDir: string) {
-    this.adapter = new OpenCodeAdapter(config);
+    this.adapter = config.runtime === 'claude-code' ? new ClaudeCodeAdapter(config) : new OpenCodeAdapter(config);
     const identity = createHash('sha256').update(config.serverUrl + config.workerToken).digest('hex').slice(0, 20);
     this.pendingDir = join(stateDir, identity);
     mkdirSync(this.pendingDir, { recursive: true, mode: 0o700 });
@@ -65,7 +68,7 @@ export class Manager {
   }
   async start() {
     const me = z.object({ id: z.string(), role: z.literal('worker') }).parse(await this.api('/api/me'));
-    console.log(`Manager connected for ${me.id}. Only human-approved requests will run.`);
+    console.log(`Manager connected for ${me.id} (${this.config.runtime}). Only human-approved requests will run.`);
     this.connect();
     this.interval = setInterval(() => { void this.wake(); }, this.config.reconcileMs);
     await this.wake();
@@ -113,7 +116,7 @@ export class Manager {
           pending = { id: task.id, runId: task.runId!, kind: 'draft', text };
         } catch (error) {
           pending = { id: task.id, runId: task.runId!, kind: 'fail', text:
-            `Execution did not complete. ${error instanceof Error ? error.message : 'Unknown error'}. Check the saved OpenCode session before retrying; a timeout does not prove execution stopped.` };
+            `Execution did not complete. ${error instanceof Error ? error.message : 'Unknown error'}. Check the saved ${this.config.runtime} session before retrying; a timeout does not prove execution stopped.` };
         } finally { clearTimeout(timeout); this.controller = undefined; }
         // Persist before delivery. A network retry must never rerun the LLM.
         this.save(pending);

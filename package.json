@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsc",
     "setup": "node scripts/setup.mjs",
+    "config:claude": "node scripts/claude-config.mjs",
     "server": "node dist/src/server.js",
     "manager": "node dist/src/manager.js",
     "test": "npm run build && node --test dist/test/*.test.js",

@@ -15,5 +15,9 @@ jobs:
       - run: node scripts/setup.mjs
       - run: docker compose up -d --build --wait
       - run: npm run test:compose
+      - name: OpenCode and Claude Code mixed workflow (mock runtimes)
+        run: npm run test:compose
+        env:
+          QUEUE_SMOKE_MIXED: '1'
       - if: always()
         run: docker compose logs --tail 100 server

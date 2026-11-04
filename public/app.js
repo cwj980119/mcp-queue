@@ -43,7 +43,7 @@ async function show(id) {
   const pane = $('detail'); pane.replaceChildren();
   pane.append(element('span',labels[task.state],`state ${task.state}`),element('h2',task.title),element('p',`${task.sender} → ${task.recipient} · ${new Date(task.createdAt).toLocaleString()}`,'metadata'),element('pre',task.body));
   if (task.documentRef) pane.append(element('p',`문서: ${task.documentRef}${task.documentVersion ? ` · 버전 ${task.documentVersion}` : ''}`,'metadata'));
-  if (task.sessionId) pane.append(element('p',`로컬 OpenCode 세션: ${task.sessionId}`,'metadata'));
+  if (task.sessionId) pane.append(element('p',`로컬 에이전트 세션: ${task.sessionId}`,'metadata'));
   if (task.error) pane.append(element('pre',task.error));
   if (task.result) pane.append(element('h2','전달한 답변'),element('pre',task.result));
   const actions = element('div',undefined,'actions');
@@ -57,10 +57,10 @@ async function show(id) {
   };
   if (task.recipient === me.id) {
     if (task.state === 'pending') button('내 에이전트 실행 승인','approve');
-    if (task.state === 'failed') button('세션 확인 후 재승인','approve','', '기존 OpenCode 세션이 종료되었는지 확인했습니까? 이전 실행의 효과가 남아 있을 수 있습니다.');
+    if (task.state === 'failed') button('세션 확인 후 재승인','approve','', '기존 에이전트 세션이 종료되었는지 확인했습니까? 이전 실행의 효과가 남아 있을 수 있습니다.');
     if (['pending','approved'].includes(task.state)) button('거절','reject');
     if (task.state === 'approved') pane.append(element('p','PC 관리자가 연결되어 있으면 곧 시작합니다.','hint'));
-    if (task.state === 'running') button('중단된 실행으로 표시','interrupt','', '이 버튼은 OpenCode를 중지하지 않습니다. 먼저 로컬 세션 상태를 확인하세요. 실행 상태만 실패로 바꿉니다.');
+    if (task.state === 'running') button('중단된 실행으로 표시','interrupt','', '이 버튼은 에이전트를 중지하지 않습니다. 먼저 로컬 세션 상태를 확인하세요. 실행 상태만 실패로 바꿉니다.');
     if (task.state === 'draft') {
       pane.append(element('h2','답변 초안'));
       const answer = element('textarea'); answer.id = 'draft-answer'; answer.rows = 14; answer.maxLength = 64000; answer.value = task.draft; pane.append(answer);

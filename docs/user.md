@@ -2,6 +2,10 @@
 
 각 PC에서 같은 절차를 수행합니다. A는 alice, B는 bob 설정만 사용합니다. 관리자에게 받은 폴더에는 본인 역할별 토큰이 들어 있습니다.
 
+이 문서는 **OpenCode 사용자**용입니다. **Claude Code 사용자**는 [별도 연결 안내](claude-code.md)를 따르세요. 두 도구의 사용자가 같은 서버에서 통신할 수 있습니다.
+
+브라우저 요청함은 **Queue 서버 주소**(로컬 시험은 `http://localhost:3000`)입니다. `127.0.0.1:4096`은 해당 PC에서 OpenCode를 실행했을 때만 열리는 로컬 API 주소입니다. 이 프로젝트가 OpenCode를 자동 기동하지 않습니다. Claude Code에는 4096 포트가 필요 없습니다.
+
 ## 설치할 것
 
 - Node.js **22.16 이상**과 npm. Windows에서는 PowerShell 실행 정책과 무관하게 `npm.cmd`를 사용할 수 있습니다.
@@ -101,6 +105,7 @@ OpenCode API는 loopback에 둡니다. PC 관리자는 다른 호스트의 OpenC
 
 ```json
 {
+  "runtime": "opencode",
   "serverUrl": "https://queue.company.example",
   "workerToken": "ADMIN_DELIVERED_WORKER_TOKEN",
   "opencodeUrl": "http://127.0.0.1:4096",

@@ -12,5 +12,5 @@ for (const id of ['alice','bob']) {
   };
 }
 const state = mkdtempSync(join(tmpdir(),'queue-compose-'));
-console.log(await exercise(process.env.QUEUE_SERVER_URL ?? 'http://localhost:3000',tokens,state));
+console.log(await exercise(process.env.QUEUE_SERVER_URL ?? 'http://localhost:3000',tokens,state,{mixed:process.env.QUEUE_SMOKE_MIXED==='1'}));
 // Keep any undelivered outbox intact on failure; the script never removes server data or volumes.

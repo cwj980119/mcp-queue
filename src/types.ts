@@ -10,7 +10,7 @@ export const createSchema = z.object({
 }).strict();
 export type NewRequest = z.infer<typeof createSchema>;
 export type Role = 'human' | 'agent' | 'worker';
-export type Actor = { id: string; name: string; role: Role };
+export type Actor = { id: string; name: string; role: Role; deviceId?:string };
 export type State = 'pending' | 'approved' | 'running' | 'draft' | 'replied' | 'rejected' | 'failed' | 'cancelled';
 export type Task = {
   id: string; sender: string; recipient: string; title: string; body: string;

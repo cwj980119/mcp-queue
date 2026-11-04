@@ -11,7 +11,8 @@ if errorlevel 1 goto failed
 echo.
 echo 서버가 실행되었습니다. 사용자에게 전달할 주소:
 type .local\server-address.txt
-echo .local\connections 폴더에서 각 사용자에게 본인의 연결 파일만 전달하세요.
+echo 사용자는 웹에 사내 로그인한 뒤 내 PC 연결에서 파일을 발급받습니다.
+echo .env의 OIDC 환경변수가 아직 없으면 로그인 설정 안내가 표시됩니다.
 echo 다른 PC에서 사용할 서버 주소 설정은 docs\easy-start.md를 참고하세요.
 pause
 exit /b 0

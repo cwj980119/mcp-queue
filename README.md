@@ -1,134 +1,69 @@
 # MCP Queue
 
-**새 간편 설정:** Windows에서는 서버 관리자가 **[서버-시작.cmd](서버-시작.cmd)**, 사용자는 **[사용자-시작.cmd](사용자-시작.cmd)**를 실행하세요. JSON 편집이나 토큰 복사 없이 연결할 수 있습니다.
+서로 다른 PC의 OpenCode·Claude Code 사용자가 업무를 요청하고, 수신자가 승인한 뒤 자신의 에이전트로 처리하고 답변을 검토·전송하는 프로그램입니다. 사내 문서는 각 에이전트에 이미 등록한 문서 MCP로 읽습니다.
 
-1. **서버:** `docker compose up -d --build --wait` 한 번으로 초기 설정과 실행을 처리합니다.
-   여러 PC가 접속할 서버 주소와 포트를 자동 감지하려면 **서버-시작.cmd** 또는 **서버-시작.sh**를 사용합니다. 회사 HTTPS 주소가 있으면 `QUEUE_SERVER_URL`을 우선 적용합니다.
-2. **관리자:** `.local/connections`에서 각 사용자에게 **본인 연결 파일 하나**를 전달합니다.
-3. **사용자:** 연결 파일 불러오기 → OpenCode/Claude Code 선택 → 프로젝트 폴더 지정 → 문서 기능 선택 → **연결하고 시작**.
+**가입과 연결:** Queue 웹 접속 → 사내 OIDC 로그인 → 사용자 자동 등록 → ‘내 PC 연결’에서 연결 파일 다운로드 → PC 프로그램에 불러오기.
 
-Node.js와 사용 중인 에이전트는 사용자 PC에 필요합니다. 프로그램이 MCP 등록·읽기 프로필·OpenCode 로컬 서버의 포트/비밀번호를 관리합니다. [간편 시작 안내](docs/easy-start.md)를 먼저 보세요.
+## 어디에 설치하나요?
 
-<details>
-<summary>구조 설명과 기존 수동 설치 방법 보기</summary>
-
-서로 다른 PC를 쓰는 **두 사용자, 사용자당 에이전트 한 개**를 연결하는 최소 프로토타입입니다. 사용자는 **OpenCode 또는 Claude Code**를 선택할 수 있으며 서로 다른 도구를 쓰는 사용자끼리도 요청·승인·초안 검토·최종 회신이 가능합니다.
-
-중앙 서버는 Docker Compose로 실행합니다. 각 PC의 작은 관리자가 WebSocket으로 연결하고, **수신자가 승인한 작업만** OpenCode 로컬 HTTP API 또는 Claude Code CLI로 전달합니다. 사내 문서는 각 사용자가 설정한 문서 MCP로 읽습니다.
-
-```mermaid
-flowchart LR
-  A[사용자 A · OpenCode 또는 Claude Code] -->|요청 MCP| S[서버 · 웹 요청함 · SQLite]
-  S -->|WebSocket 알림| M[사용자 B PC 관리자]
-  B[사용자 B · 웹 화면] -->|실행 승인| S
-  M -->|승인된 작업 인수| S
-  M -->|로컬 HTTP 또는 CLI| O[사용자 B · 선택한 에이전트]
-  O -->|기존 MCP · 본인 권한| D[사내 문서 서비스]
-  M -->|답변 초안| S
-  B -->|검토 후 전송| S
-  S -->|결과 확인| A
-```
-
-## 어디에 무엇을 설치하나요?
-
-| 위치 | 설치 | 보관하는 설정 |
+| 위치 | 설치할 것 | 설정할 것 |
 | --- | --- | --- |
-| 중앙 서버 1대 | Git, Docker Engine/Desktop, Compose v2 | 사용자별 토큰의 해시, 요청 DB. 최초 설정도 Docker로 가능하므로 Node.js 별도 설치 불필요 |
-| 사용자 A PC | Node.js 22.16 이상, OpenCode 또는 Claude Code, 이 저장소의 PC 관리자. Git은 다운로드 방법으로 권장 | A 본인의 토큰 묶음, 모델 API/로그인 및 문서 MCP 설정 |
-| 사용자 B PC | A와 동일 | B 본인의 토큰 묶음, 기존 GLM API 및 문서 MCP 설정 |
-| 사용자 브라우저 | 추가 설치 없음 | 웹 화면에 사람용 토큰 입력. 토큰은 페이지 메모리에서만 사용 |
+| 중앙 서버 | Git, Docker Engine/Desktop, Compose v2 | `.env`의 서버 주소·OIDC 설정. GLM이나 에이전트 설치 불필요 |
+| 각 사용자 PC | Node.js 22.16+, OpenCode 또는 Claude Code, 사용자 프로그램 ZIP | 기존 모델·문서 MCP 설정과 본인이 발급한 PC 연결 파일. Docker 불필요 |
+| 사용자 브라우저 | 설치 없음 | 사내 계정으로 로그인. 승인·최종 전송 담당 |
 
-사용자 PC는 Docker 없이 동작합니다. PC 관리자는 호스트에서 실행하며 선택한 에이전트 어댑터를 사용합니다. 서버 컨테이너가 사용자 PC의 프로세스를 직접 실행하지 않습니다.
-
-| 주소 | 용도 | 열리는 조건 |
-| --- | --- | --- |
-| `http://localhost:3000` | MCP Queue 웹 요청함 | 서버 Compose 실행 |
-| `http://127.0.0.1:4096` | 사용자 PC의 OpenCode API | 해당 PC에서 OpenCode를 별도 실행 |
-| Claude Code | 로컬 CLI로 실행. 4096 포트 불필요 | CLI 설치와 인증 설정 |
-
-4096은 Queue 웹 주소가 아닙니다. 이 프로젝트가 OpenCode를 자동 설치·실행하지 않으므로 OpenCode를 켜지 않았다면 연결이 거부되는 것이 정상입니다.
-
-## 서버 빠른 시작
-
-Windows PowerShell 기준입니다. Linux 절차와 사내 접속 구성은 [서버 설치](docs/server.md)를 보세요.
+## 서버 시작
 
 ```powershell
-git clone https://github.com/cwj980119/mcp-queue.git
-cd mcp-queue
-docker compose --profile tools run --rm setup
+Copy-Item .env.example .env
+# .env에 회사 서버 주소와 OIDC 정보를 입력한 후:
 docker compose up -d --build --wait
 ```
 
-http://localhost:3000 에서 웹 화면을 엽니다. 최초 설정은 `.local/alice`, `.local/bob`을 생성하며, **각 사용자에게 자신의 폴더만** 전달합니다. 같은 명령을 다시 실행해도 기존 자격증명을 덮어쓰지 않습니다.
+모든 로그인 설정은 **환경변수**로 관리합니다. 최소 설정은 `QUEUE_SERVER_URL`, `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`입니다. 회사 인증 서비스에는 기본 콜백 `<QUEUE_SERVER_URL>/auth/callback`을 등록합니다. 기본 scope는 `openid profile email`입니다. 회사 서비스의 기존 로그인 세션이 있으면 별도 입력 없이 돌아올 수 있습니다.
 
-실제 두 PC에서 접속할 때는 최초 setup 전에 `.env`에 `QUEUE_SERVER_URL=https://queue.company.example`처럼 두 PC가 접근할 주소를 설정하세요. 기본 Compose는 localhost에만 포트를 엽니다. [사내 HTTPS 연결 안내](docs/server.md#다른-pc에서-접속)를 따라 기존 리버스 프록시에 연결할 수 있습니다.
+OIDC 정보가 없으면 서버는 실행되지만 로그인을 허용하지 않습니다. Alice/Bob 계정을 자동 생성하지 않습니다. 사내 정보 없이 로컬에서 화면 흐름만 시험하려면 명시적으로 개발 모드를 사용합니다.
+
+```powershell
+docker compose -f compose.yaml -f compose.dev.yaml up -d --build --wait
+# http://localhost:3000 — 개발용 이름·이메일 로그인, localhost에만 공개
+```
+
+개발 모드는 사내 인증을 검증하지 않습니다. 공용 서버에 사용하지 않습니다. 운영 구성으로 돌아갈 때는 기본 Compose 명령을 다시 실행합니다. [전체 환경변수와 서버 운영](docs/server.md)을 참고하세요.
 
 ## 사용자 시작
 
-자신의 묶음을 저장소의 `.local/alice` 또는 `.local/bob`에 놓습니다. **OpenCode 사용자는** [사용자 설치](docs/user.md)를 따르세요. 핵심 절차는 다음과 같습니다.
+1. 관리자가 알려준 **Queue 서버 웹 주소**에 접속해 사내 계정으로 로그인합니다. 최초 로그인 시 이름·이메일을 저장합니다.
+2. **내 PC 연결 → PC 이름 입력 → 내 PC 연결 파일 다운로드**를 누릅니다.
+3. 사용자 프로그램의 **사용자-시작.cmd**를 실행합니다. 성공한 [GitHub Actions](https://github.com/cwj980119/mcp-queue/actions)의 **Artifacts → mcp-queue-user**에서 ZIP을 받을 수 있습니다. 관리자가 ZIP을 전달해도 됩니다.
+4. 연결 파일 불러오기 → OpenCode/Claude Code 선택 → 프로젝트 폴더 지정 → 문서 검색·읽기 기능 선택 → **연결하고 시작**.
+5. **내 요청함 열기**에서 요청을 보내거나, 받은 요청의 **실행 승인 → 초안 검토 → 최종 전송**을 진행합니다.
 
-1. 기존 OpenCode 설정에 본인의 `opencode-mcp.json` 내용을 **병합**합니다. 기존 GLM·문서 MCP 설정을 덮어쓰지 않습니다.
-2. `examples/opencode-reader.json`의 `queue-reader` 설정을 병합하고, 허용할 **실제 문서 검색·읽기 도구 이름**만 지정합니다.
-3. `manager.json`에 기존 OpenCode 프로젝트 절대 경로와 로컬 OpenCode 비밀번호를 설정합니다.
-4. 해당 프로젝트에서 `opencode --hostname 127.0.0.1 --port 4096`을 실행하고, 별도 터미널에서 관리자를 시작합니다.
+다음부터는 사용자 시작 파일을 실행하고 **관리자 시작**을 누릅니다. PC 프로그램과 PC가 켜져 있어야 승인된 업무를 처리합니다. OpenCode의 로컬 포트와 비밀번호는 프로그램이 관리하므로 4096에 접속하거나 서버를 따로 켤 필요가 없습니다. Claude Code는 CLI를 사용합니다. [간편 사용 안내](docs/easy-start.md).
 
-```powershell
-npm.cmd ci
-npm.cmd run build
-npm.cmd run manager -- .local/bob/manager.json
-```
+## 인증과 저장
 
-웹 화면에는 `human-token.txt` 값을 입력합니다. 에이전트·관리자용 토큰으로는 실행 승인과 최종 전송을 할 수 없습니다.
+- 계정은 OIDC의 `issuer + sub`로 식별합니다. 이름·이메일 변경으로 새 계정이 생기지 않습니다.
+- 브라우저는 HttpOnly 세션 쿠키를 사용합니다. 에이전트에 사람용 키를 전달하지 않습니다.
+- PC별 agent·worker 키는 발급 시 한 번 다운로드되고, 서버에는 해시만 저장합니다. 기본 만료 90일이며 웹에서 본인 PC 연결을 폐기할 수 있습니다.
+- PC 정보는 표준 `openid profile email`에 포함된 정보가 아닙니다. 회사가 제공하는 별도 클레임 이름을 `OIDC_DEVICE_ID_CLAIM`, `OIDC_DEVICE_NAME_CLAIM`으로 지정합니다. 없으면 사용자가 PC 이름을 입력합니다. PC 클레임은 참고 메타데이터이며 키를 물리적 PC에 고정하는 장치 인증은 아닙니다.
+- DB에는 사용자 정보, 세션, PC 키 해시와 질문·초안·회신을 보관합니다. 회사 OIDC의 ID/access/refresh token은 DB에 보관하지 않습니다.
 
-**Claude Code 사용자는** [Claude Code 설치 안내](docs/claude-code.md)를 따릅니다. 기존 사용자 묶음이라면 아래 명령으로 같은 토큰을 사용하는 설정만 추가합니다. 서버 setup을 다시 실행하지 않습니다.
+## 구조와 범위
 
-```powershell
-npm.cmd run config:claude -- .local/bob
-# manager.claude.json의 프로젝트 경로, 문서 MCP 파일, 도구 이름을 수정한 뒤:
-npm.cmd run manager -- .local/bob/manager.claude.json
-```
+서버는 TypeScript·Express·공식 MCP SDK·SQLite·WebSocket으로 구성하고, 웹은 HTML/CSS/JavaScript를 사용합니다. OIDC는 `openid-client`로 구현했습니다. PC 관리자는 이벤트가 오면 승인된 작업을 인수하고 OpenCode HTTP API 또는 Claude Code CLI를 실행합니다. **대기 중 LLM 호출과 토큰 사용은 없습니다.**
 
-`manager.json`의 `runtime: "opencode"` 또는 `manager.claude.json`의 `runtime: "claude-code"`로 실행 도구를 선택합니다. 기존 runtime 항목이 없는 설정은 OpenCode로 동작합니다. 같은 사용자로 관리자 두 개를 동시에 켜서 다른 런타임 사이에 작업이 임의 분배되게 하지 마세요.
+사용자는 동적으로 등록할 수 있고 사용자당 동시 실행은 1개입니다. 같은 계정에 PC를 여러 개 연결하면 먼저 인수한 PC가 실행합니다. 지정 PC 선택, 워크그룹, 역할 위임, 다중 서버, 계정 비활성화의 OIDC 로그아웃 연동은 아직 구현하지 않았습니다. 키 폐기는 서버 접근을 차단하지만 이미 실행 중인 로컬 프로세스는 종료하지 않습니다. 실패한 업무는 자동 재실행하지 않습니다.
 
-## 사용하는 흐름
-
-1. A가 에이전트에 “queue MCP로 bob에게 문서 DOC-42의 v3 검토를 요청해줘”라고 말하거나 웹에서 요청을 작성합니다.
-2. B의 받은 요청함에 요청이 보입니다. B가 **내 에이전트 실행 승인**을 누릅니다.
-3. B PC 관리자가 알림을 받고 작업을 인수합니다. 오프라인이었다면 재연결할 때 확인합니다.
-4. B의 OpenCode가 자신의 문서 MCP 권한으로 문서를 읽고 초안을 만듭니다.
-5. B가 초안을 수정·검토한 뒤 **검토한 답변 최종 전송**을 누릅니다.
-6. A는 보낸 요청함이나 `get_request`로 결과를 읽습니다. 회신만으로 A의 에이전트가 자동 실행되지는 않습니다.
-
-## 구현과 재사용
-
-- **서버:** TypeScript, Express, 공식 MCP TypeScript SDK, ws, Node 내장 SQLite.
-- **PC 관리자:** TypeScript, WebSocket 알림, REST 작업 인수, OpenCode HTTP/Claude Code CLI 어댑터. Claude 문서 MCP는 공식 SDK로 만든 도구 필터를 거칩니다.
-- **웹:** HTML/CSS/JavaScript. 별도 웹 빌드 도구나 프레임워크가 없습니다.
-- **재사용:** TinyTask의 트랜잭션 기반 작업 인수 코드를 이식·수정했습니다. MCP 프로토콜은 공식 SDK를 사용합니다. OpenAgentEmail과 Paperclip은 소스와 문서를 읽고 요청·회신 및 어댑터 설계에 참고했습니다. 전체 서비스들을 중복 배포하지 않습니다. 리비전·이식 범위·라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 기록했습니다.
+[구조·권한·실패 처리](docs/architecture.md), [재사용 오픈소스와 라이선스](THIRD_PARTY_NOTICES.md).
 
 ## 검증
 
 ```powershell
 npm.cmd ci
 npm.cmd test
-# 서버가 위의 Compose로 실행 중이며 .local에 두 사용자 설정이 있을 때:
-npm.cmd run test:compose
 ```
 
-Compose 검증은 `[SMOKE]` 요청 2개를 생성해 양방향 요청·승인·초안·회신을 확인합니다. 실제 MCP·REST·WebSocket과 PC 관리자 코드를 사용하고 **OpenCode·GLM·사내 문서 서비스는 모의 응답**으로 대체합니다. 실제 GLM 토큰을 사용하지 않습니다. 실제 사내 서비스 연결은 사용자 설정 후 별도 확인해야 합니다.
+모의 OIDC 제공자로 PKCE·state·nonce·ID 토큰 서명·audience·UserInfo subject 검증과 등록·재로그인·PC 키 만료·폐기·권한 분리를 확인합니다. OpenCode/Claude Code의 모의 런타임으로 양방향 요청·승인·초안·최종 회신을 검사합니다. 실제 회사 OIDC·GLM·사내 문서 서비스와의 호환성은 해당 환경변수와 사용자 설정을 넣은 후 확인해야 합니다.
 
-기본 테스트는 권한 분리, 초안 비공개, 중복 생성, 동시 작업 인수, 재접속 시 작업 확인, 오래된 실행 결과 차단도 확인합니다.
-
-OpenCode ↔ Claude Code 혼합 통신도 모의 런타임으로 검증합니다. Compose에서도 실행하려면 PowerShell에서 `$env:QUEUE_SMOKE_MIXED='1'` 후 `npm run test:compose`를 사용합니다. Claude Code 어댑터·도구 필터·실패·취소 처리도 테스트에 포함됩니다. Claude Code의 실제 모델 응답과 사내 인증 연동은 사용자 환경에서 별도 확인해야 합니다.
-
-검증 환경에서 실제 OpenCode **1.19.5**를 별도 Docker 컨테이너에 띄워 읽기 프로필 로딩·상태 API·빈 세션 생성·메시지 API 스키마를 확인했습니다. 모델 프롬프트는 보내지 않았으며 GLM·문서 MCP 연동 완료를 의미하지 않습니다. 사용자 PC에서 같은 계약 검사를 하려면 `npm run test:opencode-contract`를 사용합니다. 자세한 환경변수는 [사용자 설치 문서](docs/user.md#연결-계약-확인모델-호출-없음)를 참고하세요.
-
-## 현재 범위와 운영 특성
-
-사용자별 동시 작업은 1개이며, 목록은 최신 200개를 보여줍니다. 대기 중에는 LLM 호출이 없습니다. 연결 유지 ping과 60초 간격의 REST 복구 확인은 일반 프로그램이 수행하므로 모델 토큰을 사용하지 않습니다. 작업 중에는 문서 읽기·모델 추론에 따라 토큰을 사용합니다.
-
-실패하거나 중단된 작업은 자동 재실행하지 않습니다. OpenCode HTTP 취소는 원격 실행 중단을 보장하지 않으며, Claude Code CLI는 취소 시 로컬 프로세스에 종료 신호를 보내지만 하위 프로세스나 이미 수행한 효과까지 되돌리지 않습니다. 웹의 **중단된 실행으로 표시**도 프로세스를 종료하지 않습니다. 로컬 세션을 확인한 뒤 사람이 재승인해야 합니다. 완성된 초안은 로컬 outbox에 보관해 모델 재실행 없이 전송을 재시도합니다.
-
-이 버전에는 SSO, 워크그룹, 에이전트 자동 선택, 분산 서버, 문서별 ACL 전달 판정, OS 샌드박스가 없습니다. 실행 권한은 OpenCode의 제한된 `queue-reader` 설정으로 제어합니다. 서버에는 문서 참조뿐 아니라 **질문·생성된 초안·최종 답변도 저장**되므로 공유 가능한 내용만 전송해야 합니다. [구조 및 한계](docs/architecture.md)를 참고하세요.
-
-</details>
+과거 정적 토큰 방식은 `AUTH_MODE=legacy`에서만 사용할 수 있습니다. [기존 OpenCode 수동 설치](docs/user.md)와 [Claude 수동 설치](docs/claude-code.md)는 기존 설치의 참고 자료입니다. 새 설치는 위의 사내 로그인·PC 연결 화면을 사용하세요.

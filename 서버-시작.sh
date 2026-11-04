@@ -17,4 +17,5 @@ export QUEUE_LISTEN_ADDRESS=0.0.0.0
 docker compose up -d --build --wait
 printf '\nServer address: '
 cat .local/server-address.txt
-printf '\nGive each user only their own file in .local/connections/.\n'
+printf '\nUsers sign in with company OIDC and download their own PC connection file from the web.\n'
+printf 'Configure OIDC environment variables in .env before enabling company login.\n'

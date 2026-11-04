@@ -3,7 +3,7 @@
 <body><main>
 <header><span class="eyebrow">MCP QUEUE · 내 PC 연결</span><h1>내 에이전트를 연결하세요.</h1><p>설정 파일을 편집할 필요 없이, 평소 사용하는 도구와 문서 서비스를 선택하세요.</p></header>
 <p id="notice" role="status" aria-live="polite"></p>
-<section class="card" id="connection-card"><div class="step">1</div><div class="content"><h2>관리자에게 받은 연결 파일</h2><p>본인 이름의 <code>.queue.json</code> 파일 하나면 됩니다.</p>
+<section class="card" id="connection-card"><div class="step">1</div><div class="content"><h2>내 PC 연결 파일</h2><p>Queue 웹에 사내 계정으로 로그인하고 <strong>내 PC 연결</strong>에서 받은 <code>.queue.json</code> 파일을 선택하세요.</p>
 <form id="import-form"><label class="file-label" for="connection-file">연결 파일 선택</label><input type="file" id="connection-file" accept=".json,.queue" required><details><summary>서버 주소가 바뀌었나요?</summary><label for="server-url">변경된 서버 주소</label><input id="server-url" type="url" placeholder="https://queue.company.example"></details><button class="primary">내 계정 연결</button></form>
 <p id="identity" class="success" hidden></p></div></section>
 <section class="card" id="agent-card" hidden><div class="step">2</div><div class="content"><h2>평소 사용하는 에이전트</h2><form id="inspect-form">

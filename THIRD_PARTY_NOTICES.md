@@ -52,6 +52,9 @@ These packages are consumed as dependencies through npm, not reimplemented. Thei
 | ws | https://github.com/websockets/ws | MIT |
 | Zod | https://github.com/colinhacks/zod | MIT |
 | jsonc-parser | https://github.com/microsoft/node-jsonc-parser | MIT |
+| openid-client | https://github.com/panva/openid-client | MIT |
 | SQLite via Node.js | https://nodejs.org/api/sqlite.html | Node.js MIT; SQLite public domain |
 
 The web UI uses plain HTML, CSS and JavaScript without a frontend framework. OpenCode or Claude Code is installed and licensed separately on each user's PC. Claude Code is invoked through its documented CLI; no Claude Code implementation is copied or bundled. The local document tool filter uses the official MCP SDK.
+
+OIDC uses openid-client 6.8.9 discovery, code exchange, PKCE and explicit ID-token signature checks. The upstream OIDC example was read as API guidance; its service is not deployed separately. Tests use jose 6.2.15 (MIT, https://github.com/panva/jose) to sign mock provider tokens. Company-specific login configuration is supplied through environment variables.

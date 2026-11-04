@@ -15,7 +15,7 @@ import { waitFor } from './workflow.js';
 
 test('server bootstrap creates one user file and preserves credentials on restart',()=>{
   const dir=mkdtempSync(join(tmpdir(),'queue-bootstrap-'));
-  const env={...process.env,QUEUE_SETUP_DIR:dir,QUEUE_SERVER_URL:'https://queue.example.test'};
+  const env={...process.env,AUTH_MODE:'legacy',QUEUE_SETUP_DIR:dir,QUEUE_SERVER_URL:'https://queue.example.test'};
   try{
     execFileSync(process.execPath,['scripts/bootstrap.mjs'],{env,stdio:'pipe'});
     const before=readFileSync(join(dir,'auth.json'),'utf8');const bundle=readConnection(readFileSync(join(dir,'connections','alice.queue.json'),'utf8'));

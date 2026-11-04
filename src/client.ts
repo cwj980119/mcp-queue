@@ -48,13 +48,14 @@ export function createClientApp(options:{stateDir?:string;home?:string;commands?
     project:context?{runtime:context.runtime,directory:context.directory,servers:Object.keys(context.servers).filter(name=>name!=='queue')}:null,
     choice:existsSync(saved('choice.json'))?readJsonc(saved('choice.json')):null
   });
-  const requireConnection=()=>{if(!connection)throw new Error('먼저 관리자에게 받은 연결 파일을 불러오세요.');return connection;};
+  const requireConnection=()=>{if(!connection)throw new Error('먼저 Queue 웹에서 발급받은 내 PC 연결 파일을 불러오세요.');return connection;};
   const verify=async(value:Connection)=>{
-    await Promise.all((['human','agent','worker'] as const).map(async role=>{
+    const roles=value.version===1?['human','agent','worker'] as const:['agent','worker'] as const;
+    await Promise.all(roles.map(async role=>{
       let response:Response;
       try{response=await fetch(new URL('/api/me',value.serverUrl),{headers:{Authorization:`Bearer ${value[`${role}Token`]}`},signal:AbortSignal.timeout(7000)});}
-      catch{throw new Error('서버에 연결하지 못했습니다. 관리자에게 받은 서버 주소와 네트워크를 확인하세요.');}
-      if(!response.ok)throw new Error('서버가 연결 파일을 확인하지 못했습니다. 관리자에게 파일을 다시 받아주세요.');
+      catch{throw new Error('서버에 연결하지 못했습니다. 서버 주소와 네트워크를 확인하세요.');}
+      if(!response.ok)throw new Error('서버가 연결 파일을 확인하지 못했습니다. Queue 웹에 로그인하고 PC 연결 파일을 다시 발급받으세요.');
       const identity=await response.json() as {id:string;role:string};
       if(identity.id!==value.userId||identity.role!==role)throw new Error('연결 파일의 사용자 정보가 일치하지 않습니다.');
     }));
@@ -143,7 +144,7 @@ export function createClientApp(options:{stateDir?:string;home?:string;commands?
   }));
   app.post('/api/stop',operation(async()=>{await stop();message='중지했습니다. 서버의 요청과 PC 설정은 보관됩니다.';return view();}));
   app.post('/api/login',(_req,res)=>{
-    const value=requireConnection();const url=new URL('/',value.serverUrl);url.hash=`login=${encodeURIComponent(value.humanToken)}`;res.json({url:url.href});
+    const value=requireConnection();const url=new URL('/',value.serverUrl);if(value.version===1)url.hash=`login=${encodeURIComponent(value.humanToken!)}`;res.json({url:url.href});
   });
   app.use((error:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{
     res.status(400).json({error:error instanceof z.ZodError?'입력 내용을 확인해주세요.':error instanceof Error?error.message:'연결 중 오류가 발생했습니다.'});

@@ -13,11 +13,15 @@ if(address.mode==='local')console.log('Local-only binding: these connection file
 // Older bind mounts can leave an empty directory at a missing file path. Never remove a non-empty directory.
 const legacyAuth=join(root,'auth.json');
 if(existsSync(legacyAuth)&&statSync(legacyAuth).isDirectory())rmdirSync(legacyAuth);
-if(!existsSync(join(root,'auth.json')))await import('./setup.mjs');
-const entries=JSON.parse(readFileSync(join(root,'auth.json'),'utf8'));
+const mode=process.env.AUTH_MODE||'oidc';
+if(!['oidc','development','legacy'].includes(mode))throw new Error('Invalid AUTH_MODE');
+if(mode==='legacy'&&!existsSync(join(root,'auth.json')))await import('./setup.mjs');
+const entries=mode==='legacy'?JSON.parse(readFileSync(join(root,'auth.json'),'utf8')):[];
 // Mount only hashes into the service. A directory bind works before first bootstrap creates the file.
 const serverAuth=join(root,'server-auth');mkdirSync(serverAuth,{recursive:true,mode:0o755});chmodSync(serverAuth,0o755);
 writeFileSync(join(serverAuth,'auth.json'),JSON.stringify(entries,null,2)+'\n',{mode:0o644});chmodSync(join(serverAuth,'auth.json'),0o644);
+writeFileSync(join(serverAuth,'server-address.txt'),address.url+'\n',{mode:0o644});chmodSync(join(serverAuth,'server-address.txt'),0o644);
+if(mode!=='legacy')console.log(`${mode} login: users register on login and issue their own PC connection files. No sample users created.`);
 const folder=join(root,'connections');mkdirSync(folder,{recursive:true,mode:0o700});
 for(const id of [...new Set(entries.map(entry=>entry.id))]){
   if(!/^[A-Za-z0-9_-]{1,80}$/.test(id))throw new Error('Invalid user ID in auth.json');
@@ -58,7 +62,8 @@ if(process.getuid?.()===0){
   const workspace=statSync(process.cwd());
   const uid=Number(process.env.QUEUE_UID||workspace.uid),gid=Number(process.env.QUEUE_GID||workspace.gid);
   if(!Number.isSafeInteger(uid)||uid<0||!Number.isSafeInteger(gid)||gid<0)throw new Error('Invalid setup owner');
-  const paths=[root,legacyAuth,serverAuth,join(serverAuth,'auth.json'),folder];
+  const paths=[root,serverAuth,join(serverAuth,'auth.json'),join(root,'server-address.txt'),join(serverAuth,'server-address.txt'),folder];
+  if(mode==='legacy')paths.push(legacyAuth);
   for(const id of [...new Set(entries.map(entry=>entry.id))]){
     paths.push(join(folder,`${id}.queue.json`),join(root,id));
     for(const name of ['human-token.txt','manager.json','opencode-mcp.json','claude-mcp.json','manager.claude.json'])paths.push(join(root,id,name));

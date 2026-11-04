@@ -21,6 +21,8 @@ export class Store {
         seq INTEGER PRIMARY KEY AUTOINCREMENT, requestId TEXT NOT NULL, actor TEXT NOT NULL,
         action TEXT NOT NULL, state TEXT NOT NULL, time TEXT NOT NULL
       );`);
+    if(!(this.db.prepare('PRAGMA table_info(requests)').all() as any[]).some(column=>column.name==='runDeviceId'))
+      this.db.exec('ALTER TABLE requests ADD COLUMN runDeviceId TEXT');
   }
   close() { this.db.close(); }
   private transaction<T>(fn: () => T): T {
@@ -112,8 +114,8 @@ export class Store {
       const first = this.db.prepare("SELECT id FROM requests WHERE recipient=? AND state='approved' ORDER BY createdAt,id LIMIT 1")
         .get(actor.id) as { id: string } | undefined;
       if (!first) return null;
-      this.db.prepare("UPDATE requests SET state='running', runId=?, sessionId=NULL, draft='', error='', updatedAt=? WHERE id=? AND state='approved'")
-        .run(randomUUID(), new Date().toISOString(), first.id);
+      this.db.prepare("UPDATE requests SET state='running', runId=?, runDeviceId=?, sessionId=NULL, draft='', error='', updatedAt=? WHERE id=? AND state='approved'")
+        .run(randomUUID(),actor.deviceId??null,new Date().toISOString(),first.id);
       const updated = this.raw(first.id); this.audit(updated, actor, 'claim'); return updated;
     });
     if (task) this.onChange(task);
@@ -125,6 +127,8 @@ export class Store {
       const current = this.raw(id);
       if (current.recipient !== actor.id) throw new AppError(404, 'Request not found');
       if (current.state !== 'running' || current.runId !== runId) throw new AppError(409, 'Run is no longer active');
+      const binding=this.db.prepare('SELECT runDeviceId FROM requests WHERE id=?').get(id) as {runDeviceId:string|null};
+      if(binding.runDeviceId&&binding.runDeviceId!==actor.deviceId)throw new AppError(403,'This run belongs to another PC');
       const next = kind === 'session' ? 'running' : kind === 'draft' ? 'draft' : 'failed';
       this.db.prepare('UPDATE requests SET state=?,sessionId=?,draft=?,error=?,updatedAt=? WHERE id=?').run(next,
         kind === 'session' ? text : current.sessionId, kind === 'draft' ? text : current.draft,

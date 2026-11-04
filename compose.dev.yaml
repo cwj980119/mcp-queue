@@ -1,0 +1,13 @@
+# Explicit local demo only. Never use this login mode on a shared server.
+services:
+  bootstrap:
+    environment:
+      AUTH_MODE: development
+      QUEUE_SERVER_URL: http://localhost:${PORT:-3000}
+  server:
+    ports: !override
+      - "127.0.0.1:${PORT:-3000}:3000"
+    environment:
+      AUTH_MODE: development
+      QUEUE_SERVER_URL: http://localhost:${PORT:-3000}
+      QUEUE_BIND_ADDRESS: 127.0.0.1

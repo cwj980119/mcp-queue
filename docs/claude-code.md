@@ -1,5 +1,7 @@
 # Claude Code 사용자 연결
 
+**일반 사용자는 [간편 시작](easy-start.md)을 권장합니다.** 아래는 수동 설정 안내입니다. 새 연결 화면은 기존 문서 MCP와 모델 제공자 설정을 찾아 파일을 자동 생성하므로 JSON을 직접 수정할 필요가 없습니다.
+
 OpenCode 사용자와 Claude Code 사용자는 같은 Queue 서버를 사용합니다. 각 PC의 관리자가 런타임을 선택하므로 서버는 Claude Code를 설치할 필요가 없습니다. Claude Code 사용자 PC에는 **4096 포트가 필요 없습니다**. 브라우저 요청함은 중앙 Queue 서버 주소(로컬 시험은 `http://localhost:3000`)입니다.
 
 ## PC에 필요한 것

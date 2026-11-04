@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="client-key" content="CLIENT_KEY"><title>MCP Queue · 내 PC 연결</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body><main>
+<header><span class="eyebrow">MCP QUEUE · 내 PC 연결</span><h1>내 에이전트를 연결하세요.</h1><p>설정 파일을 편집할 필요 없이, 평소 사용하는 도구와 문서 서비스를 선택하세요.</p></header>
+<p id="notice" role="status" aria-live="polite"></p>
+<section class="card" id="connection-card"><div class="step">1</div><div class="content"><h2>관리자에게 받은 연결 파일</h2><p>본인 이름의 <code>.queue.json</code> 파일 하나면 됩니다.</p>
+<form id="import-form"><label class="file-label" for="connection-file">연결 파일 선택</label><input type="file" id="connection-file" accept=".json,.queue" required><details><summary>서버 주소가 바뀌었나요?</summary><label for="server-url">변경된 서버 주소</label><input id="server-url" type="url" placeholder="https://queue.company.example"></details><button class="primary">내 계정 연결</button></form>
+<p id="identity" class="success" hidden></p></div></section>
+<section class="card" id="agent-card" hidden><div class="step">2</div><div class="content"><h2>평소 사용하는 에이전트</h2><form id="inspect-form">
+<div class="runtime-options"><label class="runtime"><input type="radio" name="runtime" value="opencode" checked><strong>OpenCode</strong><span id="opencode-installed">설치 확인 중</span></label><label class="runtime"><input type="radio" name="runtime" value="claude-code"><strong>Claude Code</strong><span id="claude-installed">설치 확인 중</span></label></div>
+<label for="directory">평소 작업하는 프로젝트 폴더</label><input id="directory" required placeholder="예: C:/work/my-project"><p class="hint">탐색기에서 폴더 주소를 복사해 붙여넣으세요. 기존 모델·문서 설정을 찾는 데 사용합니다.</p>
+<details><summary>설치를 찾지 못했을 때</summary><label for="executable">에이전트 실행 파일 경로</label><input id="executable" placeholder="설치된 실행 파일 또는 CLI의 JS 파일"></details>
+<button class="primary">프로젝트 확인</button><p class="hint">아직 업무나 모델 추론을 실행하지 않습니다.</p></form></div></section>
+<section class="card" id="docs-card" hidden><div class="step">3</div><div class="content"><h2>업무에 사용할 문서 서비스</h2><p>기존 에이전트에 등록된 서비스 중 하나를 선택하세요.</p>
+<form id="tools-form"><label for="doc-server">문서 서비스</label><select id="doc-server" required></select><button>사용 가능한 기능 확인</button></form>
+<form id="connect-form" hidden><h3>사용할 검색·읽기 기능</h3><p class="hint">필요한 기능만 선택하세요. 추천은 도구 설명에 따른 안내이며, 쓰기 기능이 포함되어 있지 않은지 확인하세요.</p><div id="tools"></div><p class="hint">개인 에이전트 설정에 Queue가 추가됩니다. 기존 모델·문서 설정은 유지하고 변경 전 원본을 자동 백업합니다.</p><button class="primary">연결하고 시작</button></form>
+<p id="no-servers" class="hint" hidden>이 프로젝트에서 문서 서비스를 찾지 못했습니다. 평소 문서 MCP를 사용하는 프로젝트인지 확인하세요.</p></div></section>
+<section class="card ready" id="ready-card" hidden><div class="step">✓</div><div class="content"><h2 id="ready-title">연결 준비 완료</h2><p id="runtime-status"></p><p>이 프로그램을 켜 두면 요청함에서 승인한 업무를 내 PC가 처리합니다.</p><div class="actions"><button id="open-inbox" class="primary">내 요청함 열기</button><button id="start">관리자 시작</button><button id="stop">중지</button><button id="change">연결 설정 변경</button></div></div></section>
+<footer>서버의 요청함에서 실행을 승인하고, 답변 초안을 검토한 뒤 전송하세요.</footer>
+</main></body></html>

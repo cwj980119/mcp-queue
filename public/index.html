@@ -4,7 +4,7 @@
 <body>
 <header><div><span class="badge">TWO PEOPLE · TWO AGENTS</span><h1>MCP Queue</h1><p>요청을 받고, 승인하고, 답변을 검토하세요.</p></div><div id="identity"></div></header>
 <main>
-  <section id="login" class="card"><h2>내 요청함 열기</h2><p>관리자가 전달한 본인의 <code>human-token.txt</code> 값을 입력하세요. 토큰은 이 페이지의 메모리에만 보관됩니다.</p><form id="login-form"><label for="token">사람용 토큰</label><input id="token" type="password" autocomplete="off" required><button>연결</button></form></section>
+  <section id="login" class="card"><h2>내 요청함 열기</h2><p>관리자에게 받은 본인의 연결 파일을 선택하세요.</p><form id="connection-login"><label for="login-file">개인 연결 파일</label><input type="file" id="login-file" accept=".json,.queue" required><button>연결 파일로 시작</button></form><p class="hint">내 PC의 에이전트를 연결하려면 프로그램 폴더의 <strong>사용자-시작.cmd</strong>를 실행하세요.</p><details><summary>기존 토큰으로 로그인</summary><form id="login-form"><label for="token">사람용 토큰</label><input id="token" type="password" autocomplete="off" required><button>연결</button></form></details></section>
   <section id="workspace" hidden>
     <nav><button id="inbox" class="selected">받은 요청</button><button id="sent">보낸 요청</button><button id="refresh">새로고침</button><span id="connection" role="status"></span><button id="logout">로그아웃</button></nav>
     <details class="card"><summary>새 요청 보내기</summary><form id="create-form">

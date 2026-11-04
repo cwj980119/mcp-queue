@@ -1,5 +1,16 @@
 name: mcp-queue
 services:
+  bootstrap:
+    image: node:22-bookworm-slim
+    working_dir: /workspace
+    environment:
+      QUEUE_SERVER_URL: ${QUEUE_SERVER_URL:-http://localhost:3000}
+      QUEUE_UID: ${QUEUE_UID:-}
+      QUEUE_GID: ${QUEUE_GID:-}
+    user: "0:0"
+    volumes:
+      - ./:/workspace
+    command: [node, scripts/bootstrap.mjs]
   setup:
     image: node:22-bookworm-slim
     profiles: [tools]
@@ -11,6 +22,9 @@ services:
       - ./:/workspace
     command: [node, scripts/setup.mjs]
   server:
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
     build: .
     restart: unless-stopped
     init: true
@@ -21,7 +35,7 @@ services:
       DATABASE_PATH: /data/queue.sqlite
     volumes:
       - queue-data:/data
-      - ./.local/auth.json:/run/queue/auth.json:ro
+      - ./.local/server-auth:/run/queue:ro
     read_only: true
     tmpfs:
       - /tmp

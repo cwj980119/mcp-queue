@@ -12,6 +12,8 @@ import type { Task } from './types.js';
 
 type Pending = { id: string; runId: string; kind: 'draft' | 'fail'; text: string };
 export class Manager {
+  private connected=false;
+  status(){return {connected:this.connected,working:this.busy};}
   private stopped = false;
   private busy = false;
   private requested = false;
@@ -85,11 +87,12 @@ export class Manager {
     ws.on('open', () => { alive(); ws.send(JSON.stringify({ type: 'auth', token: this.config.workerToken })); });
     ws.on('ping', alive);
     ws.on('message', data => {
-      try { const message = JSON.parse(data.toString()); if (['ready', 'changed'].includes(message.type)) void this.wake(); }
+      try { const message = JSON.parse(data.toString()); if (message.type==='ready')this.connected=true; if (['ready', 'changed'].includes(message.type)) void this.wake(); }
       catch { /* Ignore malformed notifications; the database is authoritative. */ }
     });
     ws.on('error', () => {});
     ws.on('close', () => {
+      this.connected=false;
       clearTimeout(this.pingTimer);
       if (!this.stopped) this.reconnect = setTimeout(() => this.connect(), 2000 + Math.random() * 1000);
     });

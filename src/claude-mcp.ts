@@ -10,14 +10,14 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 
-export function expandEnvironment(value: unknown): unknown {
+export function expandEnvironment(value: unknown, env: Record<string,string|undefined> = process.env): unknown {
   if (typeof value === 'string') return value.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}/g, (_match, name: string, fallback?: string) => {
-    const result = process.env[name] ?? fallback;
+    const result = env[name] ?? fallback;
     if (result === undefined) throw new Error(`Missing document MCP environment variable: ${name}`);
     return result;
   });
-  if (Array.isArray(value)) return value.map(expandEnvironment);
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key,item]) => [key,expandEnvironment(item)]));
+  if (Array.isArray(value)) return value.map(item=>expandEnvironment(item,env));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key,item]) => [key,expandEnvironment(item,env)]));
   return value;
 }
 

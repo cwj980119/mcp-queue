@@ -84,6 +84,20 @@ $('login-form').onsubmit = async event => {
     notice(''); const epoch = ++generation; connect(epoch); fallback = setInterval(() => refresh().catch(error => notice(error.message)),60000); await refresh();
   } catch (error) { token = ''; notice(error.message); }
 };
+$('connection-login').onsubmit=async event=>{
+  event.preventDefault();
+  try{
+    const file=$('login-file').files[0];if(!file||file.size>12000)throw new Error('관리자에게 받은 연결 파일을 선택하세요.');
+    const value=JSON.parse(await file.text());
+    if(value.version!==1||typeof value.humanToken!=='string'||value.humanToken.length<20)throw new Error('연결 파일을 확인하세요.');
+    if(new URL(value.serverUrl).origin!==location.origin)throw new Error(`이 파일은 ${new URL(value.serverUrl).origin} 서버에서 사용하세요.`);
+    $('token').value=value.humanToken;$('login-form').requestSubmit();$('connection-login').reset();
+  }catch(error){notice(error.message);}
+};
+if(location.hash.startsWith('#login=')){
+  const fragment=location.hash;history.replaceState(null,'',location.pathname+location.search);
+  try{$('token').value=decodeURIComponent(fragment.slice(7));$('login-form').requestSubmit();}catch{notice('PC 연결 프로그램에서 요청함을 다시 열어주세요.');}
+}
 for (const name of ['inbox','sent']) $(name).onclick = () => {
   box = name; selected = undefined; $('detail').replaceChildren(element('p','요청을 선택하세요.','hint'));
   $('box-title').textContent = name === 'inbox' ? '받은 요청' : '보낸 요청';

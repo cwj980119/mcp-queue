@@ -1,5 +1,7 @@
 # 서버 설치 및 운영
 
+**첫 설치는 [간편 시작](easy-start.md)을 먼저 보세요.** 현재 Compose는 bootstrap을 포함하여 `docker compose up -d --build --wait`만으로 초기화·연결 파일 생성·실행을 처리합니다. 아래 별도 setup 명령은 기존 방식으로도 사용할 수 있습니다.
+
 ## 설치 범위
 
 중앙 서버에는 Git, Docker Engine(Windows는 Docker Desktop), Docker Compose v2가 필요합니다. Node.js, OpenCode, GLM 키, 사내 문서 MCP, 별도 Redis/PostgreSQL은 필요하지 않습니다. 설치하는 서비스는 `server` 컨테이너 하나이며 SQLite는 `queue-data` 볼륨에 저장합니다.
@@ -37,6 +39,8 @@ docker compose ps
 Node.js가 이미 설치된 서버에서는 Docker 초기화 대신 `npm run setup`도 가능합니다. 두 방식을 동시에 수행할 필요는 없습니다. 기존 `.local/auth.json`이 있으면 setup은 오류로 종료하여 덮어쓰기를 막습니다.
 
 ## 생성 파일과 전달
+
+현재 Compose는 bootstrap이 `.local/auth.json`의 해시를 `.local/server-auth/auth.json`으로 복사하고 **server-auth 폴더만** 서비스에 읽기 전용으로 연결합니다. 원문 토큰과 개인 연결 파일은 서비스 컨테이너에 마운트하지 않습니다. 기존 자격증명을 수동 교체했다면 단순 restart 대신 `docker compose up -d --force-recreate --wait`로 bootstrap 복사도 다시 수행합니다.
 
 | 파일 | 위치와 용도 |
 | --- | --- |

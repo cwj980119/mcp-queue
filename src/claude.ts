@@ -9,12 +9,12 @@ import type { Task } from './types.js';
 import type { ClaudeConfig } from './config.js';
 import { taskPrompt, type AgentAdapter } from './agent.js';
 
-export function claudeArguments(config: ClaudeConfig, sessionId: string, proxyConfig: string): string[] {
+export function claudeArguments(config: ClaudeConfig, sessionId: string, proxyConfig: string, settingsFile?:string): string[] {
   return [
     '--print', '--output-format', 'json', '--session-id', sessionId,
     '--permission-mode', 'dontAsk', '--tools', '',
     '--setting-sources', '', '--disable-slash-commands',
-    '--settings', JSON.stringify({ disableAllHooks: true, permissions: { allow: config.claude.allowedTools } }),
+    '--settings', settingsFile??JSON.stringify({ disableAllHooks: true, permissions: { allow: config.claude.allowedTools } }),
     '--strict-mcp-config', '--mcp-config', proxyConfig,
     '--allowedTools', config.claude.allowedTools.join(','),
     '--max-turns', String(config.claude.maxTurns),
@@ -43,6 +43,7 @@ export class ClaudeCodeAdapter implements AgentAdapter {
     signal.throwIfAborted();
     const temp = mkdtempSync(join(tmpdir(),'mcp-queue-claude-'));
     const proxyConfig = join(temp,'mcp.json');
+    const settingsFile=join(temp,'settings.json');
     let output: string;
     try {
       const byServer = new Map<string,string[]>();
@@ -55,8 +56,10 @@ export class ClaudeCodeAdapter implements AgentAdapter {
         command:process.execPath,args:[proxyPath,this.config.claude.mcpConfig,server,JSON.stringify(names)]
       }]));
       writeFileSync(proxyConfig,JSON.stringify({mcpServers}),{mode:0o600});
-      output = await this.run(claudeArguments(this.config, sessionId, proxyConfig), taskPrompt(task), signal);
-    }finally{try{unlinkSync(proxyConfig);}finally{rmdirSync(temp);}}
+      writeFileSync(settingsFile,JSON.stringify({disableAllHooks:true,permissions:{allow:this.config.claude.allowedTools},
+        ...(this.config.claude.providerSettings?.apiKeyHelper?{apiKeyHelper:this.config.claude.providerSettings.apiKeyHelper}:{})}),{mode:0o600});
+      output = await this.run(claudeArguments(this.config, sessionId, proxyConfig,settingsFile), taskPrompt(task), signal);
+    }finally{for(const path of [proxyConfig,settingsFile]){try{unlinkSync(path);}catch{}}rmdirSync(temp);}
     let parsed: unknown;
     try { parsed = JSON.parse(output); } catch { throw new Error('Claude Code returned invalid JSON. Check CLI version and the saved session.'); }
     const result = z.object({
@@ -75,7 +78,8 @@ export class ClaudeCodeAdapter implements AgentAdapter {
     return new Promise((resolve, reject) => {
       const [command, ...prefix] = this.config.claude.command;
       const child = spawn(command, [...prefix, ...args], {
-        cwd: this.config.directory, shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe']
+        cwd: this.config.directory, shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'],
+        env:{...process.env,...this.config.claude.providerSettings?.env}
       });
       let output = ''; let bytes = 0; let failure: Error | undefined;
       let killTimer: ReturnType<typeof setTimeout> | undefined;

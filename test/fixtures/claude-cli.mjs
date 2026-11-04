@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 const argv=process.argv.slice(2);
 const value=name=>argv[argv.indexOf(name)+1];
 let prompt='';for await(const chunk of process.stdin)prompt+=chunk;
@@ -7,7 +7,7 @@ if(argv.includes('--fixture-log'))appendFileSync(value('--fixture-log'),JSON.str
 assert(argv.includes('--print'));assert.equal(value('--output-format'),'json');
 assert.equal(value('--permission-mode'),'dontAsk');assert.equal(value('--tools'),'');
 assert.equal(value('--setting-sources'),'');assert(argv.includes('--strict-mcp-config'));
-assert(argv.includes('--disable-slash-commands'));assert.equal(JSON.parse(value('--settings')).disableAllHooks,true);
+assert(argv.includes('--disable-slash-commands'));const settings=value('--settings');assert.equal(JSON.parse(settings.startsWith('{')?settings:readFileSync(settings,'utf8')).disableAllHooks,true);
 assert(!argv.some(arg=>arg.includes('skip-permissions')));
 const mode=argv.includes('--fixture-mode')?value('--fixture-mode'):'success';
 if(mode==='hang'){

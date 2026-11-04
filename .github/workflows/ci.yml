@@ -1,5 +1,7 @@
 name: checks
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -35,3 +37,55 @@ jobs:
             시작안내.txt
       - if: always()
         run: docker compose logs --tail 100 server
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Build installer with verified bundled runtime
+        shell: pwsh
+        run: ./scripts/build-windows.ps1
+      - name: Test installation, offline launch, stop and uninstall
+        shell: pwsh
+        run: ./scripts/test-windows-package.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          include-hidden-files: true
+          path: |
+            .local/windows-build/output/MCP-Queue-Setup.exe
+            .local/windows-build/output/SHA256SUMS.txt
+          if-no-files-found: error
+  publish-installer:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, windows-installer]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-installer
+          path: release
+      - name: Publish tested installer at a stable download link
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: desktop-${{ github.run_id }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          cd release
+          sha256sum --check SHA256SUMS.txt
+          cd ..
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "This build is already published."
+          else
+            gh release create "$RELEASE_TAG" release/MCP-Queue-Setup.exe release/SHA256SUMS.txt \
+              --target "$RELEASE_SHA" --title "MCP Queue Windows installer" \
+              --notes-file installer/windows/release-notes.md --latest
+          fi

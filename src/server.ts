@@ -11,6 +11,7 @@ import { Store } from './store.js';
 import { handleMcp } from './mcp.js';
 import { IdentityStore } from './identity.js';
 import { BrowserAuth, authSettings, type AuthSettings } from './oidc.js';
+import { registerDownloads } from './downloads.js';
 
 export function createApp(options: { database: string; auth?: AuthEntry[]; authentication?: AuthSettings }) {
   const settings=options.authentication??{...authSettings({AUTH_MODE:'legacy',QUEUE_SERVER_URL:'http://localhost'}),mode:'legacy' as const};
@@ -35,6 +36,7 @@ export function createApp(options: { database: string; auth?: AuthEntry[]; authe
   });
   app.use(express.json({ limit: '256kb' }));
   app.get('/health', (_req, res) => res.json({ ok: true }));
+  registerDownloads(app);
   app.use(express.static(resolve('public')));
   browser.routes(app);
   const actors = new WeakMap<express.Request, Actor>();

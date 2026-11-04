@@ -108,7 +108,7 @@ $('issue-device').onsubmit=async event=>{
     const bundle=await api('/api/devices',{label:$('device-label').value});
     const url=URL.createObjectURL(new Blob([JSON.stringify(bundle,null,2)+'\n'],{type:'application/json'}));
     const link=element('a');link.href=url;link.download=`${bundle.deviceId}.queue.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
-    await devices();notice('연결 파일을 다운로드했습니다. 내 PC에서 사용자-시작.cmd를 실행하고 이 파일을 불러오세요.');
+    await devices();notice('연결 파일을 다운로드했습니다. 바탕화면의 MCP Queue 앱을 열고 이 파일을 불러오세요.');
   }catch(error){notice(error.message);}finally{button.disabled=false;}
 };
 $('development-login').onsubmit=async event=>{

@@ -38,6 +38,7 @@ export function createClientApp(options:{stateDir?:string;home?:string;commands?
     res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'");next();
   });
   app.get('/',(_req,res)=>res.type('html').send(readFileSync(join(publicRoot,'index.html'),'utf8').replace('CLIENT_KEY',key)));
+  app.get('/client-info',(_req,res)=>res.json({name:'mcp-queue-client',pid:process.pid}));
   app.use(express.static(publicRoot,{index:false}));app.use(express.json({limit:'32kb'}));
   app.use('/api',(req,res,next)=>{if(req.headers['x-client-key']!==key)return res.status(403).json({error:'연결 창을 새로고침하세요.'});next();});
   const view=()=>({
@@ -164,5 +165,12 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
     }
   });
   instance.http.on('error',()=>{console.error('PC 연결 프로그램을 시작하지 못했습니다. 이미 실행 중인지 확인하세요.');process.exitCode=1;});
-  for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>{void instance.close().then(()=>process.exit(0));});
+  let closing=false;
+  const close=()=>{if(closing)return;closing=true;void instance.close().then(()=>process.exit(0));};
+  for(const signal of ['SIGINT','SIGTERM'])process.once(signal,close);
+  if(process.env.QUEUE_DESKTOP_HOST==='1'){
+    let input='';process.stdin.setEncoding('utf8');
+    process.stdin.on('data',chunk=>{input+=chunk;if(input.length>100){input='';return;}if(input.includes('\n')){if(input.trim()==='quit')close();input='';}});
+    process.stdin.on('end',close);
+  }
 }

@@ -58,3 +58,9 @@ These packages are consumed as dependencies through npm, not reimplemented. Thei
 The web UI uses plain HTML, CSS and JavaScript without a frontend framework. OpenCode or Claude Code is installed and licensed separately on each user's PC. Claude Code is invoked through its documented CLI; no Claude Code implementation is copied or bundled. The local document tool filter uses the official MCP SDK.
 
 OIDC uses openid-client 6.8.9 discovery, code exchange, PKCE and explicit ID-token signature checks. The upstream OIDC example was read as API guidance; its service is not deployed separately. Tests use jose 6.2.15 (MIT, https://github.com/panva/jose) to sign mock provider tokens. Company-specific login configuration is supplied through environment variables.
+
+## Windows distribution
+
+The installer bundles the official Node.js 22.23.4 Windows x64 runtime, downloaded over HTTPS from nodejs.org and checked against its official SHA-256 manifest at build time. Node's full LICENSE (including bundled third-party notices) is distributed at `runtime/LICENSE.txt`. Production npm dependencies and their own license files are included without dev dependencies or private configuration.
+
+The per-user installer is compiled with Inno Setup on the GitHub-hosted Windows runner. Inno Setup's own compiled installer notices apply (https://jrsoftware.org/isinfo.php and https://jrsoftware.org/files/is/license.txt). The desktop launcher is original C# code targeting the .NET Framework supplied with Windows 10/11, with a WinForms notification icon and an owned-process Windows job. No separate agent or model is bundled.

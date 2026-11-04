@@ -5,6 +5,7 @@
 <header><div><span class="badge">PEOPLE · AGENTS · REQUESTS</span><h1>MCP Queue</h1><p>요청을 받고, 승인하고, 답변을 검토하세요.</p></div><div id="identity"></div></header>
 <main>
   <p id="mode-banner" class="hint" hidden></p>
+  <section class="card" id="install-panel"><h2>내 PC에 앱 설치</h2><p>설치 파일 하나로 준비됩니다. 다운로드한 파일을 실행하고 <strong>설치</strong>를 누르면 PC 연결 화면이 열립니다.</p><a class="primary link-button" href="/download/windows">Windows 앱 다운로드</a><p class="hint">Windows 10/11 · 64비트 · Node.js 별도 설치 불필요. 평소 사용하는 OpenCode 또는 Claude Code는 미리 준비하세요.</p></section>
   <section id="login" class="card"><h2>내 요청함 열기</h2><p id="login-description">로그인 설정을 확인하고 있습니다.</p>
     <a id="sso-login" class="primary link-button" href="/auth/login" hidden>사내 계정으로 로그인</a>
     <form id="development-login" hidden><p class="hint">로컬 개발용 로그인입니다. 사내 인증을 사용하지 않습니다.</p><label for="dev-name">이름</label><input id="dev-name" required maxlength="100" autocomplete="name"><label for="dev-email">이메일</label><input id="dev-email" type="email" required autocomplete="email"><button>로컬 계정으로 시작</button></form>
@@ -12,7 +13,7 @@
   </section>
   <section id="workspace" hidden>
     <nav><button id="inbox" class="selected">받은 요청</button><button id="sent">보낸 요청</button><button id="refresh">새로고침</button><span id="connection" role="status"></span><button id="logout">로그아웃</button></nav>
-    <details class="card" id="pc-panel"><summary>내 PC 연결</summary><p>연결 파일을 발급받은 뒤 PC 프로그램의 <strong>사용자-시작.cmd</strong>를 실행하고 파일을 불러오세요. OpenCode 또는 Claude Code와 사용할 프로젝트를 선택하면 연결됩니다.</p><form id="issue-device"><label for="device-label">PC 이름</label><input id="device-label" value="내 PC" maxlength="100" required><button>내 PC 연결 파일 다운로드</button></form><p class="hint">연결 파일은 발급할 때 한 번만 다운로드됩니다. 본인 PC에 보관하세요. 분실하거나 PC를 교체하면 아래에서 연결을 폐기하고 다시 발급하세요.</p><div id="devices"></div></details>
+    <details class="card" id="pc-panel"><summary>내 PC 연결</summary><p><a href="/download/windows">Windows 앱을 설치</a>한 뒤 연결 파일을 다운로드하고 앱에서 불러오세요. OpenCode 또는 Claude Code와 사용할 프로젝트를 선택하면 연결됩니다.</p><form id="issue-device"><label for="device-label">PC 이름</label><input id="device-label" value="내 PC" maxlength="100" required><button>내 PC 연결 파일 다운로드</button></form><p class="hint">연결 파일은 발급할 때 한 번만 다운로드됩니다. 본인 PC에 보관하세요. 분실하거나 PC를 교체하면 아래에서 연결을 폐기하고 다시 발급하세요.</p><div id="devices"></div></details>
     <details class="card"><summary>새 요청 보내기</summary><form id="create-form">
       <label for="recipient">받는 사용자</label><select id="recipient" required></select>
       <label for="title">제목</label><input id="title" maxlength="200" required>

@@ -23,6 +23,7 @@
 | `OIDC_DEVICE_NAME_CLAIM` | 선택. 회사가 주는 PC 표시 이름 클레임. 예: `pc.name` |
 | `SESSION_TTL_SECONDS` | `28800` (8시간), 60~604800 |
 | `DEVICE_KEY_TTL_DAYS` | `90`, 1~3650 |
+| `CLIENT_WINDOWS_DOWNLOAD_URL` | 선택. 설치 파일의 사내 HTTPS 미러 URL. 기본은 GitHub 최신 Release의 `MCP-Queue-Setup.exe` |
 | `OIDC_ALLOW_HTTP_LOCALHOST` | `false`. `true`여도 HTTP는 localhost OIDC 시험에만 허용. 사내 HTTP를 허용하는 우회 옵션이 아님 |
 | `PORT` | 호스트 공개 포트 `3000`. 컨테이너 내부는 3000 |
 | `BIND_ADDRESS` | 직접 Compose는 `127.0.0.1`. HTTPS 프록시가 같은 호스트에 있으면 유지 |

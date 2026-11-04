@@ -58,6 +58,7 @@ services:
       OIDC_DEVICE_NAME_CLAIM: ${OIDC_DEVICE_NAME_CLAIM:-}
       SESSION_TTL_SECONDS: ${SESSION_TTL_SECONDS:-28800}
       DEVICE_KEY_TTL_DAYS: ${DEVICE_KEY_TTL_DAYS:-90}
+      CLIENT_WINDOWS_DOWNLOAD_URL: ${CLIENT_WINDOWS_DOWNLOAD_URL:-}
     volumes:
       - queue-data:/data
       - ./.local/server-auth:/run/queue:ro

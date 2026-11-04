@@ -2,6 +2,10 @@
 
 서로 다른 PC의 OpenCode·Claude Code 사용자가 업무를 요청하고, 수신자가 승인한 뒤 자신의 에이전트로 처리하고 답변을 검토·전송하는 프로그램입니다. 사내 문서는 각 에이전트에 이미 등록한 문서 MCP로 읽습니다.
 
+**[⬇ Windows 설치 프로그램 다운로드](https://github.com/cwj980119/mcp-queue/releases/latest/download/MCP-Queue-Setup.exe)**
+
+파일 실행 → **설치** → PC 연결 화면이 열립니다. Node.js·npm·Git·Docker 별도 설치 없이 사용합니다. 평소 사용하는 OpenCode 또는 Claude Code는 필요합니다. Windows 10/11 x64용이며 최신 검증 빌드를 로그인 없이 받습니다.
+
 **가입과 연결:** Queue 웹 접속 → 사내 OIDC 로그인 → 사용자 자동 등록 → ‘내 PC 연결’에서 연결 파일 다운로드 → PC 프로그램에 불러오기.
 
 ## 어디에 설치하나요?
@@ -9,7 +13,7 @@
 | 위치 | 설치할 것 | 설정할 것 |
 | --- | --- | --- |
 | 중앙 서버 | Git, Docker Engine/Desktop, Compose v2 | `.env`의 서버 주소·OIDC 설정. GLM이나 에이전트 설치 불필요 |
-| 각 사용자 PC | Node.js 22.16+, OpenCode 또는 Claude Code, 사용자 프로그램 ZIP | 기존 모델·문서 MCP 설정과 본인이 발급한 PC 연결 파일. Docker 불필요 |
+| Windows 사용자 PC | 위 설치 프로그램, 기존 OpenCode 또는 Claude Code | 기존 모델·문서 MCP 설정과 본인이 발급한 PC 연결 파일. Node.js·Git·Docker 불필요 |
 | 사용자 브라우저 | 설치 없음 | 사내 계정으로 로그인. 승인·최종 전송 담당 |
 
 ## 서버 시작
@@ -35,11 +39,15 @@ docker compose -f compose.yaml -f compose.dev.yaml up -d --build --wait
 
 1. 관리자가 알려준 **Queue 서버 웹 주소**에 접속해 사내 계정으로 로그인합니다. 최초 로그인 시 이름·이메일을 저장합니다.
 2. **내 PC 연결 → PC 이름 입력 → 내 PC 연결 파일 다운로드**를 누릅니다.
-3. 사용자 프로그램의 **사용자-시작.cmd**를 실행합니다. 성공한 [GitHub Actions](https://github.com/cwj980119/mcp-queue/actions)의 **Artifacts → mcp-queue-user**에서 ZIP을 받을 수 있습니다. 관리자가 ZIP을 전달해도 됩니다.
+3. 웹의 **Windows 앱 다운로드** 또는 위 다운로드 링크에서 설치 파일을 받아 실행하고 **설치**를 누릅니다. 설치가 끝나면 PC 연결 화면이 열립니다.
 4. 연결 파일 불러오기 → OpenCode/Claude Code 선택 → 프로젝트 폴더 지정 → 문서 검색·읽기 기능 선택 → **연결하고 시작**.
 5. **내 요청함 열기**에서 요청을 보내거나, 받은 요청의 **실행 승인 → 초안 검토 → 최종 전송**을 진행합니다.
 
-다음부터는 사용자 시작 파일을 실행하고 **관리자 시작**을 누릅니다. PC 프로그램과 PC가 켜져 있어야 승인된 업무를 처리합니다. OpenCode의 로컬 포트와 비밀번호는 프로그램이 관리하므로 4096에 접속하거나 서버를 따로 켤 필요가 없습니다. Claude Code는 CLI를 사용합니다. [간편 사용 안내](docs/easy-start.md).
+다음부터는 바탕화면의 **MCP Queue** 아이콘으로 실행하고 **관리자 시작**을 누릅니다. 앱은 알림 영역에서 실행되며 아이콘을 더블클릭하면 설정 화면이 열리고 우클릭 → 종료로 중지합니다. PC 프로그램과 PC가 켜져 있어야 승인된 업무를 처리합니다. OpenCode의 로컬 포트와 비밀번호는 프로그램이 관리하므로 4096에 접속하거나 서버를 따로 켤 필요가 없습니다. Claude Code는 CLI를 사용합니다. [간편 사용 안내](docs/easy-start.md).
+
+설치 파일에는 실행 환경과 패키지가 포함되므로 설치 중 npm이나 Node.js를 다운로드하지 않습니다. 회사 내부 배포 시 `CLIENT_WINDOWS_DOWNLOAD_URL` 환경변수에 HTTPS 미러 주소를 지정할 수 있습니다. 설치 파일은 아직 코드 서명되지 않았으며 Windows·회사 보안 정책의 확인 또는 차단이 있을 수 있습니다. 업데이트는 실행 중인 앱을 종료하고 최신 설치 파일을 실행합니다. 개인 연결 설정은 앱 제거·업데이트 시 보존됩니다.
+
+macOS/Linux 및 소스 실행은 Node.js 22.16 이상에서 `npm ci`, `npm run build`, `npm run client` 순서로 진행합니다. 기존 Windows `사용자-시작.cmd`도 소스 실행용으로 남겨 둡니다.
 
 ## 인증과 저장
 

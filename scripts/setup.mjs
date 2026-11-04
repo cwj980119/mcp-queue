@@ -1,12 +1,13 @@
 import { randomBytes, createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
+import { serverAddress } from './server-address.mjs';
 
 const destination = resolve(process.env.QUEUE_SETUP_DIR ?? '.local');
 if (existsSync(join(destination, 'auth.json'))) {
   console.error('Existing auth.json found. Setup will not overwrite credentials.'); process.exit(1);
 }
-const serverUrl = process.env.QUEUE_SERVER_URL ?? 'http://localhost:3000';
+const serverUrl = serverAddress().url;
 const auth = [];
 mkdirSync(destination, { recursive: true, mode: 0o700 });
 for (const id of ['alice', 'bob']) {

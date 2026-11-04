@@ -4,7 +4,10 @@ services:
     image: node:22-bookworm-slim
     working_dir: /workspace
     environment:
-      QUEUE_SERVER_URL: ${QUEUE_SERVER_URL:-http://localhost:3000}
+      QUEUE_SERVER_URL: ${QUEUE_SERVER_URL:-}
+      QUEUE_PUBLIC_PORT: ${PORT:-3000}
+      QUEUE_BIND_ADDRESS: ${BIND_ADDRESS:-${QUEUE_LISTEN_ADDRESS:-127.0.0.1}}
+      QUEUE_HOST_ADDRESS: ${QUEUE_HOST_ADDRESS:-${COMPUTERNAME:-}}
       QUEUE_UID: ${QUEUE_UID:-}
       QUEUE_GID: ${QUEUE_GID:-}
     user: "0:0"
@@ -16,7 +19,10 @@ services:
     profiles: [tools]
     working_dir: /workspace
     environment:
-      QUEUE_SERVER_URL: ${QUEUE_SERVER_URL:-http://localhost:3000}
+      QUEUE_SERVER_URL: ${QUEUE_SERVER_URL:-}
+      QUEUE_PUBLIC_PORT: ${PORT:-3000}
+      QUEUE_BIND_ADDRESS: ${BIND_ADDRESS:-${QUEUE_LISTEN_ADDRESS:-127.0.0.1}}
+      QUEUE_HOST_ADDRESS: ${QUEUE_HOST_ADDRESS:-${COMPUTERNAME:-}}
     user: "${QUEUE_UID:-0}:${QUEUE_GID:-0}"
     volumes:
       - ./:/workspace
@@ -29,7 +35,7 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}:3000"
+      - "${BIND_ADDRESS:-${QUEUE_LISTEN_ADDRESS:-127.0.0.1}}:${PORT:-3000}:3000"
     environment:
       AUTH_FILE: /run/queue/auth.json
       DATABASE_PATH: /data/queue.sqlite

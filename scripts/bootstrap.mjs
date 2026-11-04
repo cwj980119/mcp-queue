@@ -1,8 +1,15 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync, chmodSync, statSync, rmdirSync, chownSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { serverAddress } from './server-address.mjs';
 
 const root=resolve(process.env.QUEUE_SETUP_DIR??'.local');
+const address=serverAddress();
+process.env.QUEUE_SERVER_URL=address.url;
+mkdirSync(root,{recursive:true,mode:0o700});
+writeFileSync(join(root,'server-address.txt'),address.url+'\n',{mode:0o644});
+console.log(`Queue server address: ${address.url}`);
+if(address.mode==='local')console.log('Local-only binding: these connection files work on this PC only. Use the server start file for other PCs.');
 // Older bind mounts can leave an empty directory at a missing file path. Never remove a non-empty directory.
 const legacyAuth=join(root,'auth.json');
 if(existsSync(legacyAuth)&&statSync(legacyAuth).isDirectory())rmdirSync(legacyAuth);
@@ -22,11 +29,23 @@ for(const id of [...new Set(entries.map(entry=>entry.id))]){
       agent:mcp.mcp.queue.headers.Authorization.replace(/^Bearer /,''),worker:manager.workerToken};
     if(!Object.entries(tokens).every(([role,token])=>entries.some(entry=>entry.id===id&&entry.role===role&&entry.tokenHash===createHash('sha256').update(token).digest('hex'))))
       throw new Error('credential mismatch');
-    const serverUrl=(process.env.QUEUE_SERVER_URL??manager.serverUrl).replace(/\/$/,'');
+    const serverUrl=address.url;
     const data={version:1,serverUrl,userId:id,name:entries.find(entry=>entry.id===id).name,
       humanToken:tokens.human,agentToken:tokens.agent,workerToken:tokens.worker};
     const text=JSON.stringify(data,null,2)+'\n';
     if(!existsSync(file)||readFileSync(file,'utf8')!==text)writeFileSync(file,text,{mode:0o600});
+    // Keep older server-issued bundles consistent too, without changing tokens or local task settings.
+    const sync=(name,value)=>{
+      const path=join(root,id,name);const next=JSON.stringify(value,null,2)+'\n';
+      if(readFileSync(path,'utf8')!==next)writeFileSync(path,next,{mode:0o600});
+    };
+    sync('manager.json',{...manager,serverUrl});
+    sync('opencode-mcp.json',{...mcp,mcp:{...mcp.mcp,queue:{...mcp.mcp.queue,url:new URL('/mcp',serverUrl).href}}});
+    for(const name of ['manager.claude.json','claude-mcp.json']){
+      const path=join(root,id,name);if(!existsSync(path))continue;
+      const value=JSON.parse(readFileSync(path,'utf8'));
+      sync(name,name==='manager.claude.json'?{...value,serverUrl}:{...value,mcpServers:{...value.mcpServers,queue:{...value.mcpServers.queue,url:new URL('/mcp',serverUrl).href}}});
+    }
     chmodSync(file,0o600);
     console.log(`Connection file ready: .local/connections/${id}.queue.json (give it only to ${id})`);
   }catch{

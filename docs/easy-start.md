@@ -14,13 +14,19 @@ docker compose up -d --build --wait
 
 최초 자격증명과 사용자별 연결 파일을 자동 생성합니다. 다시 실행해도 기존 사용자 토큰과 DB를 초기화하지 않습니다. 서버에 Node.js, OpenCode, Claude Code는 설치하지 않습니다.
 
-실제 여러 PC에서 쓸 때는 **처음 실행 전에** `.env`에 사용자들이 접속할 공통 서버 주소를 한 번 지정하세요.
+**서버 시작 파일은 호스트의 IP를 감지하고 공개 포트를 반영해 연결 파일의 주소를 자동으로 넣습니다.** 기본 포트는 3000이며 `.env`의 `PORT`를 바꾸면 새 포트가 반영됩니다. Windows는 `서버-시작.cmd`, Linux/macOS는 `sh 서버-시작.sh`를 사용합니다. 시작 파일은 LAN 접속을 위한 바인딩을 선택하되 명시한 `BIND_ADDRESS` 설정은 유지합니다.
+
+회사 HTTPS 도메인이나 리버스 프록시를 사용하는 경우에만 실제 접속 주소를 `.env`에 명시합니다. 이 주소는 자동 감지보다 우선합니다.
 
 ```dotenv
 QUEUE_SERVER_URL=https://queue.company.example
+# 같은 서버의 HTTPS 프록시가 내부로 연결하는 구성이라면:
+BIND_ADDRESS=127.0.0.1
 ```
 
-회사 HTTPS 프록시/도메인 연결은 [서버 운영 안내](server.md#다른-pc에서-접속)를 따릅니다. 기본값 `http://localhost:3000`은 같은 PC에서 시험할 때의 주소입니다. 사용자 파일에 localhost가 들어 있으면 다른 PC에서 중앙 서버를 찾을 수 없으므로 주소를 지정한 뒤 Compose를 다시 실행해 연결 파일을 갱신합니다. Windows 시작 파일에 표시하는 localhost 주소는 서버 PC에서 확인하는 주소입니다.
+회사 HTTPS 프록시/도메인 연결은 [서버 운영 안내](server.md#다른-pc에서-접속)를 따릅니다. 시작 파일은 최종 접속 주소를 표시하고 `.local/server-address.txt`에도 저장합니다. 재실행하면 기존 연결 파일의 주소를 갱신하면서 인증키는 유지합니다. 이미 다른 PC에 전달한 파일은 자동 수정할 수 없으므로, 주소가 바뀌면 새 파일을 전달해야 합니다.
+
+직접 `docker compose up`만 실행하면 기본은 로컬 시험용 바인딩이며 `localhost:공개포트`가 발급됩니다. 이 모드에서는 다른 PC가 접속하지 못한다는 안내를 출력합니다. 컨테이너가 본 호스트와 사용자가 접속할 주소는 다를 수 있어 컨테이너 IP를 배포 주소로 사용하지 않습니다. 여러 NIC/VPN이 있으면 `QUEUE_HOST_ADDRESS` 또는 `QUEUE_SERVER_URL`로 올바른 주소를 지정할 수 있습니다. 방화벽·공유기 포트 전달·회사 DNS 설정은 별도이며 자동으로 변경하지 않습니다.
 
 Linux에서도 보통 동일한 한 줄로 실행합니다. bootstrap이 프로그램 폴더 소유자를 기준으로 생성 파일의 소유자를 맞춥니다. 공유 디렉터리 등 특수한 권한 구성이면 `QUEUE_UID=$(id -u) QUEUE_GID=$(id -g) docker compose up -d --build --wait`처럼 명시할 수 있습니다. Node.js는 서버 컨테이너 안에서만 사용됩니다.
 

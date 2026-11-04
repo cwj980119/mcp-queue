@@ -24,6 +24,11 @@ test('server bootstrap creates one user file and preserves credentials on restar
     execFileSync(process.execPath,['scripts/bootstrap.mjs'],{env,stdio:'pipe'});
     assert.equal(readFileSync(join(dir,'auth.json'),'utf8'),before);
     assert.equal(readConnection(readFileSync(join(dir,'connections','alice.queue.json'),'utf8')).agentToken,bundle.agentToken);
+    execFileSync(process.execPath,['scripts/bootstrap.mjs'],{env:{...env,QUEUE_SERVER_URL:'',QUEUE_BIND_ADDRESS:'0.0.0.0',QUEUE_HOST_ADDRESS:'192.0.2.15',QUEUE_PUBLIC_PORT:'4510'},stdio:'pipe'});
+    const updated=readConnection(readFileSync(join(dir,'connections','alice.queue.json'),'utf8'));
+    assert.equal(updated.serverUrl,'http://192.0.2.15:4510');assert.equal(updated.humanToken,bundle.humanToken);assert.equal(updated.workerToken,bundle.workerToken);
+    assert.equal(JSON.parse(readFileSync(join(dir,'alice','manager.json'),'utf8')).serverUrl,updated.serverUrl);
+    assert.equal(readFileSync(join(dir,'server-address.txt'),'utf8').trim(),updated.serverUrl);
     assert.throws(()=>readConnection(JSON.stringify({...bundle,serverUrl:'file:///bad'})));
     assert.throws(()=>readConnection(JSON.stringify({...bundle,humanToken:'bad\nheader'.repeat(4)})));
   }finally{rmSync(dir,{recursive:true,force:true});}
